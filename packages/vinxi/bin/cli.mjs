@@ -65,6 +65,7 @@ const command = defineCommand({
 			async run({ args }) {
 				const chokidar = await import("chokidar");
 				const { loadApp } = await import("../lib/load-app.js");
+				const { createDevServer } = await import("../lib/dev-server.js");
 				const { log, c } = await import("../lib/logger.js");
 				log(c.dim(c.yellow(`v${packageJson.version}`)));
 
@@ -74,17 +75,41 @@ const command = defineCommand({
 				
 				const configFile = args.config;
 				globalThis.MANIFEST = {};
-				const app = await loadApp(configFile, args);
 
-				log(c.dim(c.green("starting dev server")));
+				let app = await loadApp(configFile, args);
+
 				let devServer;
+
 				/** @type {import('@vinxi/listhen').Listener} */
 				let listener;
-				/** @type {import('chokidar').FSWatcher} */
-				let watcher;
+
+				const restartDevServer = async (newApp) => {
+					devServer && await devServer.close();
+					newApp && (app = newApp);
+
+					const preset =
+						args.preset ??
+						process.env.TARGET ??
+						process.env.PRESET ??
+						process.env.SERVER_PRESET ??
+						process.env.SERVER_TARGET ??
+						process.env.NITRO_PRESET ??
+						process.env.NITRO_TARGET ??
+						(process.versions.bun !== undefined ? "bun" : "node-server");
+
+					devServer = await createDevServer(app, {
+						force: args.force,
+						devtools: args.devtools || Boolean(process.env.DEVTOOLS),
+						port: Number(args.port ?? process.env.PORT ?? 3000),
+						preset: preset,
+					});
+
+					listener = await devServer.listen();
+					// app.hooks("app:dev:server:restart", restart);
+				};
 
 				function createWatcher() {
-					watcher = chokidar.watch(
+					const watcher = chokidar.watch(
 						["app.config.*", "vite.config.*", configFile].filter(Boolean),
 						{
 							ignoreInitial: true,
@@ -96,17 +121,18 @@ const command = defineCommand({
 						log(c.dim(c.green("change detected in " + path)));
 						log(c.dim(c.green("reloading app")));
 						const newApp = await loadApp(configFile, args);
-						if (!newApp) return;
-						restartDevServer(newApp);
+						await restartDevServer(newApp);
 					});
 				}
+
 				async function createKeypressWatcher() {
 					const { emitKeypressEvents } = await import("readline");
 					emitKeypressEvents(process.stdin);
 					process.stdin.on("keypress", async (_, key) => {
 						switch (key.name) {
 							case "r":
-								restartDevServer(app);
+								log(c.dim(c.green("restarting dev server")));
+								await restartDevServer(app);
 								break;
 							case "u":
 								listener.showURL();
@@ -121,68 +147,10 @@ const command = defineCommand({
 						}
 					});
 				}
-				async function restartDevServer(newApp) {
-					const { createDevServer } = await import("../lib/dev-server.js");
-					await devServer?.close();
-					let preset =
-						args.preset ??
-						process.env.TARGET ??
-						process.env.PRESET ??
-						process.env.SERVER_PRESET ??
-						process.env.SERVER_TARGET ??
-						process.env.NITRO_PRESET ??
-						process.env.NITRO_TARGET ??
-						(process.versions.bun !== undefined ? "bun" : "node-server");
 
-					devServer = await createDevServer(newApp, {
-						force: args.force,
-						devtools: args.devtools || Boolean(process.env.DEVTOOLS),
-						port: Number(args.port ?? process.env.PORT ?? 3000),
-						preset: preset,
-					});
-					log(c.dim(c.green("restarting dev server")));
-					listener = await devServer.listen();
-				}
-
-				if (!app) {
-					let fsWatcher = (watcher = chokidar.watch(
-						["app.config.*", "vite.config.*", configFile].filter(Boolean),
-						{
-							ignoreInitial: true,
-							persistent: true,
-						},
-					));
-					fsWatcher.on("all", async (path) => {
-						log(c.dim(c.green("change detected in " + path)));
-						log(c.dim(c.green("reloading app")));
-						const newApp = await loadApp(configFile, args);
-						if (!newApp) return;
-
-						fsWatcher.close();
-						createWatcher();
-						restartDevServer(newApp);
-					});
-					return;
-				}
 				createWatcher();
 				await createKeypressWatcher();
-				const { createDevServer } = await import("../lib/dev-server.js");
-				let preset =
-					args.preset ??
-					process.env.TARGET ??
-					process.env.PRESET ??
-					process.env.SERVER_PRESET ??
-					process.env.SERVER_TARGET ??
-					process.env.NITRO_PRESET ??
-					process.env.NITRO_TARGET ??
-					(process.versions.bun !== undefined ? "bun" : "node-server");
-				devServer = await createDevServer(app, {
-					force: args.force,
-					port: Number(args.port ?? process.env.PORT ?? 3000),
-					devtools: args.devtools || Boolean(process.env.DEVTOOLS),
-					preset: preset,
-				});
-				listener = await devServer.listen();
+				await restartDevServer();
 			},
 		},
 		build: {
