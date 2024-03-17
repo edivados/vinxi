@@ -4,6 +4,53 @@
 
 ### Patch Changes
 
+- Updated dependencies [4caab63]
+  - vinxi@0.3.10
+  - @vinxi/react@0.2.2
+  - @vinxi/server-components@0.3.3
+  - @vinxi/server-functions@0.3.2
+
+## null
+
+### Patch Changes
+
+- Updated dependencies [ca7b28b]
+- Updated dependencies [38a6d0d]
+  - vinxi@0.3.9
+  - @vinxi/react@0.2.2
+  - @vinxi/server-components@0.3.2
+
+## null
+
+### Patch Changes
+
+- Updated dependencies [7a597bf]
+  - vinxi@0.3.8
+  - @vinxi/react@0.2.1
+
+## null
+
+### Patch Changes
+
+- Updated dependencies [54214a7]
+  - @vinxi/react@0.2.1
+  - @vinxi/server-components@0.3.1
+  - @vinxi/server-functions@0.3.1
+  - vinxi@0.3.7
+
+## null
+
+### Patch Changes
+
+- Updated dependencies [55fde20]
+- Updated dependencies [25093a5]
+  - vinxi@0.3.6
+  - @vinxi/react@0.2.0
+
+## null
+
+### Patch Changes
+
 - Updated dependencies [af337ca]
 - Updated dependencies [bd2dc5d]
   - vinxi@0.3.4

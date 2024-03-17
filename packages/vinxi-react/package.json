@@ -1,6 +1,6 @@
 {
   "name": "@vinxi/react",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "type": "module",
   "author": "Nikhil Saraf <nsaraf98@gmail.com>",
   "files": [
@@ -11,6 +11,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "react-server": "./react-server.js",
       "import": "./index.js",
       "types": "./dist/index.d.ts"
     }
@@ -30,6 +31,6 @@
     "@types/react": "^18.2.21",
     "react": "0.0.0-experimental-035a41c4e-20230704",
     "typescript": "^5.3.3",
-    "vinxi": "0.3.5"
+    "vinxi": "0.3.10"
   }
 }

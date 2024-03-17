@@ -1,5 +1,5 @@
 import { serverComponents } from "@vinxi/server-components/plugin";
-import { serverFunctions } from "@vinxi/server-functions/plugin";
+import { se, serverFunctions } from "@vinxi/server-functions/plugin";
 import reactRefresh from "@vitejs/plugin-react";
 import { createApp } from "vinxi";
 
@@ -20,9 +20,17 @@ const app = createApp({
 			plugins: () => [serverComponents.server(), reactRefresh()],
 		},
 		{
+			name: "ssr",
+			type: "http",
+			handler: "./app/server.tsx",
+			target: "server",
+			plugins: () => [],
+			base: "/",
+		},
+		{
 			name: "client",
-			type: "spa",
-			handler: "./index.ts",
+			type: "client",
+			handler: "./app/client.tsx",
 			target: "browser",
 			plugins: () => [
 				serverFunctions.client({
@@ -31,7 +39,7 @@ const app = createApp({
 				reactRefresh(),
 				serverComponents.client(),
 			],
-			base: "/",
+			base: "/_build",
 		},
 		{
 			name: "server",
@@ -45,15 +53,12 @@ const app = createApp({
 					resolve: {
 						conditions: ["react-server"],
 					},
+					runtime: `@vinxi/react-server-dom/runtime`,
 				}),
 				serverComponents.serverActions(),
 			],
 		},
 	],
-});
-
-app.hooks.hook("app:build:router:vite:config:resolved", ({ vite }) => {
-	console.log(vite.build.rollupOptions.input);
 });
 
 export default app;

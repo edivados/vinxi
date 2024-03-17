@@ -4,6 +4,20 @@
 
 ### Patch Changes
 
+- Updated dependencies [38a6d0d]
+  - @vinxi/react@0.2.2
+
+## null
+
+### Patch Changes
+
+- Updated dependencies [54214a7]
+  - @vinxi/react@0.2.1
+
+## null
+
+### Patch Changes
+
 - 0c92d33: breaking: `mode` option on routers has been renamed to `type`
 - 2670f50: breaking: change "build" router type to "client"
 - 4a14764: breaking: update "handler" router types to "http"

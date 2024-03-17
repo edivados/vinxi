@@ -1,5 +1,31 @@
 # @vinxi/plugin-references
 
+## 0.3.3
+
+### Patch Changes
+
+- Updated dependencies [4caab63]
+- Updated dependencies [8247943]
+  - vinxi@0.3.10
+  - @vinxi/plugin-directives@0.3.1
+
+## 0.3.2
+
+### Patch Changes
+
+- 38a6d0d: fix: vinxi/react ready for RSC
+- Updated dependencies [ca7b28b]
+- Updated dependencies [38a6d0d]
+  - vinxi@0.3.9
+
+## 0.3.1
+
+### Patch Changes
+
+- 54214a7: fix: mjs chunks and rsc example fix
+- Updated dependencies [54214a7]
+  - vinxi@0.3.7
+
 ## 1.0.0
 
 ### Patch Changes

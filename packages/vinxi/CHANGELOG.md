@@ -1,5 +1,41 @@
 # vinxi
 
+## 0.3.10
+
+### Patch Changes
+
+- 4caab63: fix: rsc ssr example, remove vinxi devtools for now
+
+## 0.3.9
+
+### Patch Changes
+
+- ca7b28b: fix: dont log error if error loading module during collect-styles phase raw-imports result in warnings in dev-mode #226
+- 38a6d0d: fix: vinxi/react ready for RSC
+  - @vinxi/devtools@0.2.0
+
+## 0.3.8
+
+### Patch Changes
+
+- 7a597bf: feat: update config function signature
+  - @vinxi/devtools@0.2.0
+
+## 0.3.7
+
+### Patch Changes
+
+- 54214a7: fix: mjs chunks and rsc example fix
+  - @vinxi/devtools@0.2.0
+
+## 0.3.6
+
+### Patch Changes
+
+- 55fde20: fix: cssMinify enabled by default for both ssr and cliet
+- 25093a5: fix: fix .ts config file extensions in load-app.js
+  - @vinxi/devtools@0.2.0
+
 ## 0.3.4
 
 ### Patch Changes
