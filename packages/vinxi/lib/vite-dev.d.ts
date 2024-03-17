@@ -1,4 +1,4 @@
-import { Plugin as VitePlugin, ResolvedConfig as _ResolvedConfig } from "vite";
+import { Plugin as VitePlugin, ResolvedConfig as _ResolvedConfig, ServerOptions } from "vite";
 
 import { App } from "./app.js";
 import { DevConfig } from "./dev-server.js";
@@ -48,6 +48,9 @@ export type CustomizableConfig = Omit<
 		"outDir" | "ssr" | "ssrManifest" | "rollupOptions"
 	> & {
 		rollupOptions?: Omit<import("vite").BuildOptions["rollupOptions"], "input">;
+	};
+	server?: {
+		hmr?: ServerOptions["hmr"];
 	};
 };
 
