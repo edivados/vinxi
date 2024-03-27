@@ -1,5 +1,4 @@
-import boxen from "boxen";
-import { mkdir, rm, writeFile } from "fs/promises";
+import { mkdir, rm } from "fs/promises";
 import { createRequire } from "module";
 import { build, copyPublicAssets, createNitro, prerender } from "nitropack";
 
@@ -31,11 +30,7 @@ const require = createRequire(import.meta.url);
  */
 export async function createBuild(app, buildConfig) {
 	console.log("\n");
-	console.log(
-		boxen(`⚙  ${c.green("Building your app...")}`, {
-			padding: { left: 1, right: 4 },
-		}),
-	);
+	console.log(`⚙  ${c.green("Building your app...")}`);
 	await app.hooks.callHook("app:build:start", { app, buildConfig });
 	const { existsSync, promises: fsPromises, readFileSync } = await import("fs");
 	const { join } = await import("./path.js");
@@ -275,11 +270,7 @@ export async function createBuild(app, buildConfig) {
 	});
 
 	console.log("\n");
-	console.log(
-		boxen(`⚙  ${c.green(`Preparing app for ${nitro.options.preset}...`)}`, {
-			padding: { left: 1, right: 4 },
-		}),
-	);
+	console.log(`⚙  ${c.green(`Preparing app for ${nitro.options.preset}...`)}`);
 
 	nitro.options.appConfigFiles = [];
 	nitro.logger = consola.withTag(app.config.name);
@@ -339,11 +330,7 @@ async function createViteBuild(config) {
  */
 async function createRouterBuild(app, router) {
 	console.log("\n");
-	console.log(
-		boxen(c.green(`📦 Compiling ${router.name} router...`), {
-			padding: { left: 1, right: 4 },
-		}),
-	);
+	console.log(c.green(`📦 Compiling ${router.name} router...`));
 	await app.hooks.callHook("app:build:router:start", { app, router });
 	let buildRouter = router;
 	if (router.type === "spa" && !router.handler.endsWith(".html")) {
@@ -537,7 +524,8 @@ const routerModePlugin = {
 		config("appType", {
 			appType: "custom",
 			ssr: {
-				noExternal: ["vinxi"],
+				noExternal: ["vinxi", /@vinxi\//],
+				external: ["@vinxi/listhen"],
 			},
 			build: {
 				rollupOptions: {
@@ -580,7 +568,8 @@ const routerModePlugin = {
 		config("appType", {
 			appType: "custom",
 			ssr: {
-				noExternal: ["vinxi"],
+				noExternal: ["vinxi", /@vinxi\//],
+				external: ["@vinxi/listhen"],
 			},
 			build: {
 				rollupOptions: {
@@ -620,7 +609,8 @@ const routerModePlugin = {
 		config("appType", {
 			appType: "custom",
 			ssr: {
-				noExternal: ["vinxi"],
+				noExternal: ["vinxi", /@vinxi\//],
+				external: ["@vinxi/listhen"],
 			},
 			build: {
 				rollupOptions: {
@@ -693,7 +683,7 @@ function handerBuild() {
 							preserveEntrySignatures: "exports-only",
 						},
 						ssr: true,
-						cssMinify: 'esbuild',
+						cssMinify: "esbuild",
 						minify: process.env.MINIFY !== "false" ?? true,
 						manifest: true,
 						target: "node18",
@@ -730,7 +720,7 @@ function browserBuild() {
 						},
 						minify: process.env.MINIFY !== "false" ?? true,
 						manifest: true,
-						cssMinify: 'esbuild',
+						cssMinify: "esbuild",
 						outDir: join(router.outDir, router.base),
 						target: "esnext",
 						emptyOutDir: false,
