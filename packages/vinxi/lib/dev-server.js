@@ -2,8 +2,11 @@ import { resolveCertificate } from "@vinxi/listhen";
 
 import { fileURLToPath } from "node:url";
 
-import { consola, withLogger } from "./logger.js";
+import virtual from "@rollup/plugin-virtual";
+import { watch } from "rollup";
+import { consola } from "./logger.js";
 import { join, normalize } from "./path.js";
+import esbuild from "esbuild"
 
 export * from "./router-dev-plugins.js";
 
@@ -170,7 +173,11 @@ export async function createDevServer(
 				.flat(),
 		],
 		handlers: [...(app.config.server.handlers ?? [])],
-		plugins: [...(app.config.server.plugins ?? [])],
+		plugins: [
+			fileURLToPath(new URL("./app-fetch.js", import.meta.url)),
+			// fileURLToPath(new URL("./app-manifest.js", import.meta.url)),
+			...(app.config.server.plugins ?? [])
+		],
 	});
 
 	// We do this so that nitro doesn't try to load app.config.ts files since those are
@@ -200,16 +207,40 @@ export async function createDevServer(
 	// 	}
 	// }
 
-	// Running plugins manually
-	const plugins = [
-		new URL("./app-fetch.js", import.meta.url).href,
-		new URL("./app-manifest.js", import.meta.url).href,
-	];
+	let code = nitro.options.plugins.map((plugin, idx) => `import plugin${idx} from "${plugin}"`).join("\n") + "\n\nexport default async function(devApp, app) {\n" + nitro.options.plugins.map((_, idx) => `await plugin${idx}(devApp, app)`).join("\n") + "\n}";
+	const watcher = watch({
+		input: "entry",
+		watch: { skipWrite: true },
+		external: [
+			/node:.*/
+		],
+		plugins: [
+			virtual({
+				entry: code
+			})
+		],
+	});
 
-	for (const plugin of plugins) {
-		const { default: pluginFn } = await import(plugin);
-		await pluginFn(devApp);
-	}
+	watcher.on("event", async (event) => {
+		switch(event.code) {
+			case "BUNDLE_END":
+				const code = (await event.result.generate({})).output[0].code;
+				const mod = await import(`data:text/javascript;base64,${btoa(code)}`);
+				mod.default(devApp, app);
+				break;
+		}
+	});
+
+	// Running plugins manually
+	// const plugins = [
+	// 	new URL("./app-fetch.js", import.meta.url).href,
+	// 	new URL("./app-manifest.js", import.meta.url).href,
+	// ];
+
+	// for (const plugin of plugins) {
+	// 	const { default: pluginFn } = await import(plugin);
+	// 	await pluginFn(devApp);
+	// }
 
 	return {
 		...devApp,
@@ -237,6 +268,7 @@ export async function createDevServer(
 					.map((router) => router.internals.devServer?.close()),
 			);
 			await app.hooks.callHook("app:dev:server:closed", { app, devApp });
+			await watcher.close();
 		},
 	};
 }

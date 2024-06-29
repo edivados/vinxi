@@ -7,6 +7,9 @@ export default createApp({
 		experimental: {
 			asyncContext: true,
 		},
+		plugins: [
+			"./test.ts"
+		]
 	},
 	routers: [
 		{
