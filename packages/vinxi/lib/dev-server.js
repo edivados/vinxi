@@ -291,7 +291,15 @@ export async function createDevServer(
 		}
 	});
 	
-	nitro.hooks.hook("dev:reload", restart);
+	nitro.hooks.hook("dev:reload", async () => {
+		await restart();
+		app.config.routers
+			.filter(router => router.target === "server" && router.internals.devServer)
+			.forEach(router => {
+				const mod = router.internals.devServer?.moduleGraph.getModuleById("\x00virtual:#internal/nitro/task");
+				mod && router.internals.devServer?.moduleGraph.invalidateModule(mod);
+			});
+	});
 	nitro.hooks.hookOnce("close", async () => {
 		server && await server.close();
 	});
