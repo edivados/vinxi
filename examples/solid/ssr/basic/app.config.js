@@ -12,14 +12,14 @@ export default createApp({
 		},
 		tasks: {
 			"my-task": {
-				handler: "./app/my-task.ts",
+				handler: "./my-task.ts",
 			}
 		},
 		scheduledTasks: {
 			'* * * * *': ['my-task']
 		},
 		plugins: [
-			"./app/my-plugin.ts"
+			"./my-plugin.ts"
 		]
 	},
 	routers: [
