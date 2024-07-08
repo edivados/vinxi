@@ -1,9 +1,16 @@
-import { resolveCertificate } from "@vinxi/listhen";
+import { listen, resolveCertificate } from "@vinxi/listhen";
 
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { consola, withLogger } from "./logger.js";
-import { join, normalize } from "./path.js";
+import babel from "@babel/core";
+import wsAdapter from "crossws/adapters/node";
+import { createApp, eventHandler, fromNodeMiddleware, toNodeListener } from "h3";
+import httpProxy from "http-proxy";
+import { existsSync, readFileSync } from "node:fs";
+import { debounce } from "perfect-debounce";
+import serveStatic from "serve-static";
+import { consola } from "./logger.js";
+import { join, normalize, resolve } from "./path.js";
 
 export * from "./router-dev-plugins.js";
 
@@ -132,6 +139,33 @@ export async function createDevServer(
 		...app.config.server,
 		rootDir: "",
 		dev: true,
+		typescript: {
+			generateTsConfig: false
+		},
+		rollupConfig: {
+			plugins: [
+				{
+					name: "vinxi:dev-server",
+					load(id) {
+						if (id.endsWith("nitro-dev.mjs")) {
+							return readFileSync(fileURLToPath(new URL("./dev-entry.js", import.meta.url)), "utf-8");
+						}
+					},
+					transform(src, id) {
+						if(normalize(id).endsWith("nitropack/dist/runtime/task.mjs")) {
+							const lines = src.split("\n");
+							// lines.forEach((line, index) => console.log(index, line));
+							lines[49] = "  const jobs = [];\n" + lines[49];
+							lines[50] = lines[50].replace("const cron = ", "jobs.push(");
+							lines[64] = lines[64].replace(";", ");");
+							lines[65] = lines[65] + "\n  return jobs;";
+							const transformed = babel.transformSync(lines.join("\n"));
+							return transformed;
+						}
+					}
+				}
+			]
+		},
 		preset: "nitro-dev",
 		publicAssets: [
 			...app.config.routers
@@ -170,7 +204,11 @@ export async function createDevServer(
 				.flat(),
 		],
 		handlers: [...(app.config.server.handlers ?? [])],
-		plugins: [...(app.config.server.plugins ?? [])],
+		plugins: [
+			fileURLToPath(new URL("./app-fetch.js", import.meta.url)),
+			fileURLToPath(new URL("./app-manifest.js", import.meta.url)),
+			...(app.config.server.plugins ?? [])
+		],
 	});
 
 	// We do this so that nitro doesn't try to load app.config.ts files since those are
@@ -180,63 +218,131 @@ export async function createDevServer(
 
 	await app.hooks.callHook("app:dev:nitro:config", { app, nitro });
 
-	// During development, we use our own nitro dev server instead of the one provided by nitro.
-	// it's very similar to the one provided by nitro, but it has different defaults. Most importantly, it
-	// doesn't run the server in a worker.
-	const { createDevServer: createNitroDevServer } = await import(
-		"./nitro-dev.js"
-	);
+	const devApp = createApp();
 
-	const devApp = await createNitroDevServer(nitro);
-
-	await app.hooks.callHook("app:dev:server:created", { app, devApp });
-
-	// for (const router of app.config.routers) {
-	// 	if (router.internals && router.internals.routes) {
-	// 		const routes = await router.internals.routes.getRoutes();
-	// 		for (const route of routes) {
-	// 			withLogger({ router }, () => console.log(route.path));
-	// 		}
-	// 	}
-	// }
-
-	// Running plugins manually
-	const plugins = [
-		new URL("./app-fetch.js", import.meta.url).href,
-		new URL("./app-manifest.js", import.meta.url).href,
-	];
-
-	for (const plugin of plugins) {
-		const { default: pluginFn } = await import(plugin);
-		await pluginFn(devApp);
+	// Serve asset dirs
+	for (const asset of nitro.options.publicAssets) {
+		devApp.use(
+			asset.baseURL || "/", 
+			fromNodeMiddleware(serveStatic(asset.dir, { fallthrough: asset.fallthrough }))
+		);
 	}
 
+	// User defined dev proxy
+	for (const route of Object.keys(nitro.options.devProxy).sort().reverse()) {
+		let opts = nitro.options.devProxy[route];
+		if (typeof opts === "string") {
+			opts = { target: opts };
+		}
+		const proxy = createProxy(opts);
+		devApp.use(
+			route,
+			eventHandler(async (event) => {
+				await proxy.handle(event);
+			})
+		);
+	}
+
+	// Dev-only handlers
+	for (const handler of nitro.options.devHandlers) {
+		devApp.use(handler.route ?? "/", handler.handler);
+	}
+
+	const { build, prepare } = await import("nitropack");
+
+	await prepare(nitro)
+	await build(nitro);
+	await waitForServerOutput(nitro);
+
+	/** @type {{ close: () => Promise<void>}} */
+	let server;
+
+	const restart = debounce(async () => {
+		server && await server.close();
+		
+		/** @type {import("nitropack").NitroApp} */
+		const nitroApp = await import(
+			pathToFileURL(resolve(nitro.options.output.serverDir, `index.mjs`)).href + `?t=${new Date().getTime()}`
+		).then(mod => mod.default);
+
+		nitroApp.router.use("/**", devApp.handler);
+
+		await app.hooks.callHook("app:dev:server:created", { app, devApp: nitroApp });
+		await app.hooks.callHook("app:dev:server:listener:creating", { app, devApp: nitroApp });
+
+		/** @type {import("@vinxi/listhen").Listener} */
+		const listener = await listen(toNodeListener(nitroApp.h3App), {
+			port,
+			https: serveConfig.https
+		});
+
+		await app.hooks.callHook("app:dev:server:listener:created", { app, devApp: nitroApp, listener });
+
+		if (nitro.options.experimental?.websocket) {
+		  const { handleUpgrade } = wsAdapter(nitroApp.h3App.websocket);
+		  listener.server.on("upgrade", handleUpgrade);
+		}
+
+		server = {
+			async close() {
+				await nitroApp.hooks.callHook("close");
+				await listener.close();
+			}
+		}
+	});
+	
+	nitro.hooks.hook("dev:reload", restart);
+	nitro.hooks.hookOnce("close", async () => {
+		server && await server.close();
+	});
+
 	return {
-		...devApp,
-		listen: async () => {
-			await app.hooks.callHook("app:dev:server:listener:creating", {
-				app,
-				devApp,
-			});
-			const listener = await devApp.listen(port, {
-				https: serveConfig.https,
-			});
-			await app.hooks.callHook("app:dev:server:listener:created", {
-				app,
-				devApp,
-				listener,
-			});
-			return listener;
-		},
+		listen: async () => restart(),
 		close: async () => {
-			await app.hooks.callHook("app:dev:server:closing", { app, devApp });
-			await devApp.close();
+			await app.hooks.callHook("app:dev:server:closing", { app });
+			await nitro.close();
 			await Promise.all(
 				app.config.routers
 					.filter((router) => router.internals.devServer)
 					.map((router) => router.internals.devServer?.close()),
 			);
-			await app.hooks.callHook("app:dev:server:closed", { app, devApp });
+			await app.hooks.callHook("app:dev:server:closed", { app });
 		},
 	};
+}
+
+function createProxy(defaults = {}) {
+	const proxy = httpProxy.createProxy();
+	const handle = (event, opts = {}) => {
+		return new Promise((resolve, reject) => {
+			proxy.web(
+				event.node.req,
+				event.node.res,
+				{ ...defaults, ...opts },
+				(error) => {
+					if (error.code !== "ECONNRESET") {
+						reject(error);
+					}
+					resolve();
+				},
+			);
+		});
+	};
+	return {
+		proxy,
+		handle,
+	};
+}
+
+async function waitForServerOutput(nitro) {
+	return new Promise((resolve) => {
+		const checkServerOutput = () => {
+			if (existsSync(join(nitro.options.output.serverDir, "index.mjs"))) {
+				resolve(true);
+				return;
+			}
+			setTimeout(checkServerOutput);
+		};
+		checkServerOutput();
+	});
 }

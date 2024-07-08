@@ -635,7 +635,7 @@ importers:
         specifier: ^3.3.3
         version: 3.3.5
       vinxi:
-        specifier: 0.3.12
+        specifier: workspace:*
         version: link:../../../../packages/vinxi
       vite-plugin-solid:
         specifier: ^2.7.0
@@ -857,15 +857,15 @@ importers:
       pathe:
         specifier: ^1.1.1
         version: 1.1.1
+      perfect-debounce:
+        specifier: ^1.0.0
+        version: 1.0.0
       radix3:
         specifier: ^1.1.0
         version: 1.1.0
       resolve:
         specifier: ^1.22.6
         version: 1.22.8
-      serve-placeholder:
-        specifier: ^2.0.1
-        version: 2.0.1
       serve-static:
         specifier: ^1.15.0
         version: 1.15.0

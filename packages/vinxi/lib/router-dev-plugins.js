@@ -55,6 +55,13 @@ export const ROUTER_MODE_DEV_PLUGINS = {
 					router.handler,
 				)}"; export default handler;`;
 			},
+			"#internal/nitro/task": () => {
+				return `
+					export const runTask = globalThis.__vinxi_nitro_runtime__.task.runTask;
+					export const getCronTasks = globalThis.__vinxi_nitro_runtime__.task.getCronTasks;
+					export const runCronTasks = globalThis.__vinxi_nitro_runtime__.task.runCronTasks;
+				`
+			}
 		}),
 		routes(),
 		devEntries(),
