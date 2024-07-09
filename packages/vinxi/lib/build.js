@@ -18,7 +18,7 @@ import { manifest } from "./plugins/manifest.js";
 import { routes } from "./plugins/routes.js";
 import { treeShake } from "./plugins/tree-shake.js";
 import { virtual } from "./plugins/virtual.js";
-import { externalNitroImports } from "./plugins/external-nitro-imports.js";
+import { externalizeNitro } from "./plugins/externalize-nitro.js";
 
 /** @typedef {{}} BuildConfig */
 
@@ -452,7 +452,7 @@ async function createRouterBuild(app, router) {
 }
 
 const buildTargetPlugin = {
-	server: () => [routes(), handerBuild(), treeShake(), manifest(), externalNitroImports()],
+	server: () => [routes(), handerBuild(), treeShake(), manifest(), externalizeNitro()],
 	browser: () => [routes(), browserBuild(), treeShake(), manifest()],
 };
 

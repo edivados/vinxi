@@ -254,6 +254,10 @@ export async function createDevServer(
 	await build(nitro);
 	await waitForServerOutput(nitro);
 
+	import.meta._asyncContext = Boolean(nitro.options.experimental?.asyncContext);
+	import.meta._tasks = Boolean(nitro.options.experimental?.tasks);
+	import.meta._websocket = Boolean(nitro.options.experimental?.websocket);
+
 	/** @type {{ close: () => Promise<void>}} */
 	let server;
 
@@ -296,8 +300,10 @@ export async function createDevServer(
 		app.config.routers
 			.filter(router => router.target === "server" && router.internals.devServer)
 			.forEach(router => {
-				const mod = router.internals.devServer?.moduleGraph.getModuleById("\x00virtual:#internal/nitro/task");
-				mod && router.internals.devServer?.moduleGraph.invalidateModule(mod);
+				["#internal/nitro", "#internal/nitro/task"].forEach(id => {
+					const mod = router.internals.devServer?.moduleGraph.getModuleById(`\x00virtual:${id}`);
+					mod && router.internals.devServer?.moduleGraph.invalidateModule(mod);
+				})
 			});
 	});
 	nitro.hooks.hookOnce("close", async () => {

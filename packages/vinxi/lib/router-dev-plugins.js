@@ -5,6 +5,7 @@ import { config } from "./plugins/config.js";
 import { css } from "./plugins/css.js";
 import { fileSystemWatcher } from "./plugins/fs-watcher.js";
 import { manifest } from "./plugins/manifest.js";
+import { nitroRuntime } from "./plugins/nitro-runtime.js";
 import { routes } from "./plugins/routes.js";
 import { treeShake } from "./plugins/tree-shake.js";
 import { virtual } from "./plugins/virtual.js";
@@ -55,14 +56,8 @@ export const ROUTER_MODE_DEV_PLUGINS = {
 					router.handler,
 				)}"; export default handler;`;
 			},
-			"#internal/nitro/task": () => {
-				return `
-					export const runTask = globalThis.__vinxi_nitro_runtime__.task.runTask;
-					export const getCronTasks = globalThis.__vinxi_nitro_runtime__.task.getCronTasks;
-					export const runCronTasks = globalThis.__vinxi_nitro_runtime__.task.runCronTasks;
-				`
-			}
 		}),
+		nitroRuntime(),
 		routes(),
 		devEntries(),
 		manifest(),

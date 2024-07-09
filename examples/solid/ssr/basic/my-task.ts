@@ -4,7 +4,7 @@ export default {
       description: "Run my demo task",
     },
     run({ payload, context }) {
-      console.log("Running my demo task...8");
+      console.log("Running my demo task...");
       return { result: "Success" };
     },
 };
