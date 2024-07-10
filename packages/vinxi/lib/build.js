@@ -77,7 +77,7 @@ export async function createBuild(app, buildConfig) {
 			process.env.NITRO_PRESET ??
 			process.env.NITRO_TARGET ??
 			app.config.server.preset ??
-			(process.versions.bun !== undefined ? "bun" : "node-server"),
+			(process.versions.bun !== undefined ? "bun" : undefined),
 		alias: {
 			/**
 			 * These
@@ -452,7 +452,7 @@ async function createRouterBuild(app, router) {
 }
 
 const buildTargetPlugin = {
-	server: () => [routes(), handerBuild(), treeShake(), manifest(), externalizeNitro()],
+	server: () => [routes(), handlerBuild(), treeShake(), manifest(), externalizeNitro()],
 	browser: () => [routes(), browserBuild(), treeShake(), manifest()],
 };
 
@@ -659,7 +659,7 @@ export async function getEntries(router) {
 /**
  * @returns {import('./vite-dev.d.ts').Plugin}
  */
-function handerBuild() {
+function handlerBuild() {
 	return {
 		name: "react-rsc:handler",
 		async config({ router, app }, env) {
