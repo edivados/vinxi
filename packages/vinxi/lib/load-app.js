@@ -79,14 +79,17 @@ async function loadFile(
 				let out = `${options.name}.config.timestamp_${Date.now()}.${
 					["ts", "js", "tsx", "jsx"].includes(ext) ? "js" : "mjs"
 				}`;
-				await bundleConfigFile(`${options.name}.config.${ext}`, out);
-				const importedApp = await import(pathToFileURL(out).href).then((m) => ({
-					export: m.default,
-					path: filepath,
-				}));
-
-				await rm(out);
-				return importedApp;
+				try {
+					await bundleConfigFile(`${options.name}.config.${ext}`, out);
+					const importedApp = await import(pathToFileURL(out).href).then((m) => ({
+						export: m.default,
+						path: filepath,
+					}));
+					return importedApp;
+				}
+				finally {
+					await rm(out, { force: true });
+				}
 			}
 		}
 
@@ -106,13 +109,17 @@ async function loadFile(
 				let out = `${configFileName}.timestamp_${Date.now()}.${
 					["ts", "js", "tsx", "jsx"].includes(ext) ? "js" : "mjs"
 				}`;
-				await bundleConfigFile(options.configFile, out);
-				const importedApp = await import(pathToFileURL(out).href).then((m) => ({
-					export: m.default,
-					path: filepath,
-				}));
-				await rm(out);
-				return importedApp;
+				try {
+					await bundleConfigFile(options.configFile, out);
+					const importedApp = await import(pathToFileURL(out).href).then((m) => ({
+						export: m.default,
+						path: filepath,
+					}));
+					return importedApp;
+				}
+				finally {
+					await rm(out, { force: true });
+				}
 			}
 		}
 
