@@ -1,6 +1,7 @@
 "use server";
 
 import { getEvent } from "vinxi/http";
+import { getCachedUserData } from "../cached-action";
 
 let store = { count: 0 };
 export async function increment() {
@@ -12,4 +13,8 @@ export async function increment() {
 
 export async function getStore() {
 	return store.count;
+}
+
+export async function getUserData() {
+	return getCachedUserData()
 }

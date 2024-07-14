@@ -250,7 +250,7 @@ export async function createDevServer(
 
 	const { build, prepare } = await import("nitropack");
 
-	await prepare(nitro)
+	await prepare(nitro);
 	await build(nitro);
 	await waitForServerOutput(nitro);
 
@@ -300,10 +300,10 @@ export async function createDevServer(
 		app.config.routers
 			.filter(router => router.target === "server" && router.internals.devServer)
 			.forEach(router => {
-				["#internal/nitro", "#internal/nitro/task"].forEach(id => {
+				["#internal/nitro", "#internal/nitro/cache", "#internal/nitro/task"].forEach(id => {
 					const mod = router.internals.devServer?.moduleGraph.getModuleById(`\x00virtual:${id}`);
 					mod && router.internals.devServer?.moduleGraph.invalidateModule(mod);
-				})
+				});
 			});
 	});
 	nitro.hooks.hookOnce("close", async () => {

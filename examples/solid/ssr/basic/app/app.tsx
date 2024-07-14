@@ -2,6 +2,7 @@ import { Counter } from "./Counter";
 import Logo from "./logo.png";
 import "./style.css";
 import { runTask, getCronTasks } from "#internal/nitro/task";
+import { getUserData } from "./actions";
 
 async function runMyTask() {
 	"use server";
@@ -25,6 +26,7 @@ export default function App({ assets, scripts }) {
 					<img src={Logo} />
 					<Counter />
 					<button class="ml-4 bg-red-500" onclick={() => runMyTask()}>Run my task</button>
+					<button class="ml-4 bg-red-500" onclick={() => getUserData().then(data => console.log(data))}>Fetch cached data</button>
 				</section>
 				{scripts}
 			</body>

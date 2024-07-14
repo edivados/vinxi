@@ -1,6 +1,7 @@
 import "#internal/nitro/virtual/polyfill";
 import { scheduledTasks, tasks } from "#internal/nitro/virtual/tasks";
 import { nitroApp } from "../app.mjs";
+import { cachedFunction, defineCachedFunction } from "../cache.mjs";
 import { getCronTasks, runCronTasks, runTask, startScheduleRunner } from "../task.mjs";
 import { trapUnhandledNodeErrors } from "../utils.mjs";
 
@@ -63,7 +64,11 @@ globalThis.__vinxi_nitro_runtime__ = {
   task: {
     runTask,
     getCronTasks,
-    runCronTasks
+    runCronTasks,
+  },
+  cache: {
+    cachedFunction,
+    defineCachedFunction,
   }
 };
 

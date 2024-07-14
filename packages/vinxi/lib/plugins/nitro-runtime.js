@@ -4,7 +4,16 @@ export function nitroRuntime() {
 	return virtual({
 		"#internal/nitro": () => {
 			return `
+				export const cachedFunction = globalThis.__vinxi_nitro_runtime__.cache.cachedFunction;
+				export const defineCachedFunction = globalThis.__vinxi_nitro_runtime__.cache.defineCachedFunction;
+				
 				export const runCronTasks = globalThis.__vinxi_nitro_runtime__.task.runCronTasks;
+			`
+		},
+		"#internal/nitro/cache": () => {
+			return `
+				export const cachedFunction = globalThis.__vinxi_nitro_runtime__.cache.cachedFunction;
+				export const defineCachedFunction = globalThis.__vinxi_nitro_runtime__.cache.defineCachedFunction;
 			`
 		},
     "#internal/nitro/task": () => {
