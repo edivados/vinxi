@@ -1,5 +1,6 @@
 "use server";
 
+import { getCronTasks, runTask } from "#internal/nitro/task";
 import { getEvent } from "vinxi/http";
 import { getCachedUserData } from "../cached-action";
 
@@ -15,6 +16,12 @@ export async function getStore() {
 	return store.count;
 }
 
-export async function getUserData() {
-	return getCachedUserData()
+export async function runMyTask() {
+	console.log("every minute these tasks run: ", await getCronTasks('* * * * *'));
+	await runTask("my-task");
 }
+
+export async function getUserData() {
+	return getCachedUserData();
+}
+

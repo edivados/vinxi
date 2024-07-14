@@ -1,14 +1,7 @@
 import { Counter } from "./Counter";
 import Logo from "./logo.png";
 import "./style.css";
-import { runTask, getCronTasks } from "#internal/nitro/task";
-import { getUserData } from "./actions";
-
-async function runMyTask() {
-	"use server";
-	console.log("every minute these tasks run: ", await getCronTasks('* * * * *'))
-	await runTask("my-task")
-}
+import { getUserData, runMyTask } from "./actions";
 
 export default function App({ assets, scripts }) {
 	return (
