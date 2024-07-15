@@ -48,9 +48,7 @@ export type CustomizableConfig = Omit<
 	> & {
 		rollupOptions?: Omit<import("vite").BuildOptions["rollupOptions"], "input">;
 	};
-	server?: {
-		hmr?: ServerOptions["hmr"];
-	};
+	server?: Pick<ServerOptions, "hmr" | "watch">
 };
 
 export type { ConfigEnv as ConfigEnv } from "vite";
