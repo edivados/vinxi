@@ -1,6 +1,6 @@
 {
   "name": "vinxi",
-  "version": "0.3.14",
+  "version": "0.4.0",
   "type": "module",
   "author": "Nikhil Saraf <nsaraf98@gmail.com>",
   "files": [
@@ -43,7 +43,6 @@
       "types": "./dist/types/lib/fs-router.d.ts"
     },
     "./routes": {
-      "import": "./lib/routes.js",
       "types": "./types/routes.d.ts"
     },
     "./client": {
