@@ -1,6 +1,12 @@
 # @vinxi/router
 
-## 1.0.0
+## 0.4.1
+
+### Patch Changes
+
+- bd2021e3: fix relative versioning
+
+## 0.4.0
 
 ### Patch Changes
 
@@ -120,7 +126,7 @@
 - Updated dependencies [3a3573f]
   - vinxi@0.3.1
 
-## 1.0.0
+## 0.4.0
 
 ### Patch Changes
 
@@ -138,7 +144,7 @@
 - Updated dependencies [b25063b]
   - vinxi@0.2.1
 
-## 1.0.0
+## 0.4.0
 
 ### Minor Changes
 
@@ -239,7 +245,7 @@
 - Updated dependencies [9c60b73]
   - vinxi@0.1.1
 
-## 1.0.0
+## 0.4.0
 
 ### Minor Changes
 
